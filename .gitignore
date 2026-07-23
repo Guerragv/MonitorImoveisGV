@@ -1,23 +1,27 @@
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
 # Ambiente virtual
 .venv/
-venv/
 
-# Banco de dados
+# Cache Python
+__pycache__/
+*.pyc
+
+# Bancos locais
 *.db
+
+# Dados gerados
+data/*.json
+data/*.db
 
 # Logs
 logs/
-*.log
 
-# VS Code
-.vscode/
+# Arquivos temporários
+*.html
+*.txt
 
-# Sistema
-.DS_Store
-Thumbs.db
+# Arquivos de teste
+tests/
+scripts/
+
+# Configurações sensíveis
+.env
