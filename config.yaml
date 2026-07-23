@@ -1,0 +1,13 @@
+email:
+  remetente: guerragv83@gmail.com
+  senha: ""
+  destinatario: guerragv83@gmail.com
+
+pesquisa:
+  cidade: "Governador Valadares"
+  tipo: "Casa"
+  finalidade: "Aluguel"
+  valor_maximo: 1200
+
+agendamento:
+  horario: "08:00"
