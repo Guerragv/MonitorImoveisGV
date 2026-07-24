@@ -8,6 +8,7 @@ from app.filtros import aprovado
 from app.notificacao import enviar_email
 from app.configuracao import carregar_config
 from database.banco import ja_existe, salvar
+from database.backup import criar_backup
 
 from datetime import datetime
 from pathlib import Path

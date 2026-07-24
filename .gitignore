@@ -29,3 +29,6 @@ app/*backup*.py
 app/email_alerta.py
 corrigir_datas.py
 procurar_links_docarmo.py
+
+# Backups locais do banco
+backup/
