@@ -1,36 +1,53 @@
 import smtplib
+import yaml
+from pathlib import Path
+
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 
-def enviar_email(imoveis):
+def carregar_config():
 
-    if not imoveis:
-        print("Nenhum imóvel para enviar.")
-        return
+    caminho = Path("config/config.yaml")
+
+    with open(
+        caminho,
+        "r",
+        encoding="utf-8"
+    ) as arquivo:
+
+        return yaml.safe_load(arquivo)
 
 
-    # Configurações do e-mail
-    remetente = "monitorimoveisgv@gmail.com"
-    senha = "jsxy ctmu ayeh vpqr"
-    destinatario = "guerragv83@gmail.com"
+
+def enviar_email(imovel):
+
+    config = carregar_config()
+
+    email_config = config["notificacao"]
+
+    remetente = email_config["remetente"]
+
+    senha = email_config["senha_app"]
+
+    destinatarios = email_config["destinatarios"]
 
 
     assunto = "🏠 MonitorImoveisGV - Novo imóvel encontrado"
 
 
-    corpo = """
+    corpo = f"""
 Olá!
 
-O MonitorImoveisGV encontrou novos imóveis dentro dos filtros configurados.
+O MonitorImoveisGV encontrou um novo imóvel dentro dos filtros configurados.
 
-"""
-
-
-    for imovel in imoveis:
-
-        corpo += f"""
 --------------------------------
+
+Origem:
+{imovel.get('origem', '')}
+
+Código:
+{imovel.get('codigo', '')}
 
 Título:
 {imovel.get('titulo', '')}
@@ -53,10 +70,6 @@ Vagas:
 Link:
 {imovel.get('link', '')}
 
-"""
-
-
-    corpo += """
 --------------------------------
 
 Este alerta foi enviado automaticamente pelo MonitorImoveisGV.
@@ -66,11 +79,18 @@ Este alerta foi enviado automaticamente pelo MonitorImoveisGV.
     mensagem = MIMEMultipart()
 
     mensagem["From"] = remetente
-    mensagem["To"] = destinatario
+
+    mensagem["To"] = ", ".join(destinatarios)
+
     mensagem["Subject"] = assunto
 
+
     mensagem.attach(
-        MIMEText(corpo, "plain", "utf-8")
+        MIMEText(
+            corpo,
+            "plain",
+            "utf-8"
+        )
     )
 
 
@@ -83,24 +103,31 @@ Este alerta foi enviado automaticamente pelo MonitorImoveisGV.
 
         servidor.starttls()
 
+
         servidor.login(
             remetente,
             senha
         )
 
-        servidor.sendmail(
-            remetente,
-            destinatario,
-            mensagem.as_string()
+
+        servidor.send_message(
+            mensagem,
+            from_addr=remetente,
+            to_addrs=destinatarios
         )
+
 
         servidor.quit()
 
 
         print("E-mail enviado com sucesso!")
 
+        return True
+
 
     except Exception as erro:
 
         print("Erro ao enviar e-mail:")
         print(erro)
+
+        return False

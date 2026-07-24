@@ -5,23 +5,27 @@
 __pycache__/
 *.pyc
 
-# Bancos locais
+# Banco de dados
 *.db
-
-# Dados gerados
-data/*.json
-data/*.db
 
 # Logs
 logs/
+*.log
 
-# Arquivos temporários
+# Configuração privada
+config/config.yaml
+
+# Arquivos HTML de análise
 *.html
-*.txt
 
-# Arquivos de teste
-tests/
-scripts/
+# Scripts de teste
+teste_*.py
+analisar_*.py
+descobrir_*.py
+capturar_*.py
 
-# Configurações sensíveis
-.env
+# Arquivos auxiliares locais
+app/*backup*.py
+app/email_alerta.py
+corrigir_datas.py
+procurar_links_docarmo.py

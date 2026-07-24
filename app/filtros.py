@@ -1,54 +1,131 @@
-from config.filtros import (
-    VALOR_MAXIMO,
-    CIDADE,
-    TIPO,
-    FINALIDADE
-)
+import yaml
+from pathlib import Path
+
+
+def carregar_config():
+
+    caminho = Path("config/config.yaml")
+
+    with open(
+        caminho,
+        "r",
+        encoding="utf-8"
+    ) as arquivo:
+
+        return yaml.safe_load(arquivo)
+
+
+
+config = carregar_config()
+
+filtros = config["filtros"]
+
+
+VALOR_MAXIMO = filtros["valor_maximo"]
+
+CIDADE = filtros["cidade"]
+
+TIPO = filtros["tipo"]
+
+FINALIDADE = filtros["finalidade"]
+
 
 
 def aprovado(imovel):
 
-    titulo = imovel.get("titulo", "")
-    localizacao = imovel.get("localizacao", "")
-    valor = imovel.get("valor", "")
-
-
-    # Verifica cidade
-    texto_localizacao = (
-        titulo + " " + localizacao
+    texto = (
+        str(imovel.get("titulo", ""))
+        + " "
+        + str(imovel.get("localizacao", ""))
+        + " "
+        + str(imovel.get("valor", ""))
     ).lower()
 
 
-    if CIDADE.lower() not in texto_localizacao:
+    # Cidade
+    if CIDADE.lower() not in texto:
         return False
 
 
-    # Verifica tipo do imóvel
-    if TIPO.lower() not in titulo.lower():
+    # Tipo
+    if TIPO.lower() not in texto:
         return False
 
 
-    # Extrai valor do aluguel
-    valor_limpo = (
+    # Finalidade
+    if FINALIDADE.lower() not in texto:
+        return False
+
+
+    # Valor
+    valor = str(imovel.get("valor", ""))
+
+    numeros = (
         valor
-        .replace("Aluguel", "")
         .replace("R$", "")
         .replace(".", "")
         .replace(",", ".")
-        .strip()
+    )
+
+    import re
+
+    encontrado = re.search(
+        r"\d+(\.\d+)?",
+        numeros
+    )
+
+    if not encontrado:
+        return False
+
+
+    valor_numero = float(encontrado.group())
+
+
+    if valor_numero > VALOR_MAXIMO:
+        return False
+
+
+    return True
+
+
+
+    # Verifica tipo
+
+    if TIPO.lower() not in texto:
+        return False
+
+
+
+    # Verifica finalidade
+
+    if FINALIDADE.lower() not in texto:
+        return False
+
+
+
+    # Verifica valor
+
+    valor_limpo = (
+        valor
+        .replace("R$", "")
+        .replace(".", "")
+        .replace(",", ".")
     )
 
 
     try:
+
         valor_numero = float(valor_limpo)
 
     except:
+
         return False
 
 
-    # Verifica valor máximo
+
     if valor_numero > VALOR_MAXIMO:
         return False
+
 
 
     return True
