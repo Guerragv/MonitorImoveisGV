@@ -14,8 +14,8 @@ import subprocess
 
 app = Flask(
     __name__,
-    template_folder="templates",
-    static_folder="static"
+    template_folder=str(BASE_DIR / "web" / "templates"),
+    static_folder=str(BASE_DIR / "web" / "static")
 )
 
 
