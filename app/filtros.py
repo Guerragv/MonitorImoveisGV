@@ -1,130 +1,72 @@
-import yaml
-from pathlib import Path
+import re
 
 
-def carregar_config():
-
-    caminho = Path("config/config.yaml")
-
-    with open(
-        caminho,
-        "r",
-        encoding="utf-8"
-    ) as arquivo:
-
-        return yaml.safe_load(arquivo)
+def aprovado(imovel, filtros):
 
 
+    tipo_imovel = str(
+        imovel.get("tipo_imovel", "")
+    ).strip().lower()
 
-config = carregar_config()
 
-filtros = config["filtros"]
-
-
-VALOR_MAXIMO = filtros["valor_maximo"]
-
-CIDADE = filtros["cidade"]
-
-TIPO = filtros["tipo"]
-
-FINALIDADE = filtros["finalidade"]
+    tipo_negocio = str(
+        imovel.get("tipo_negocio", "")
+    ).strip().lower()
 
 
 
-def aprovado(imovel):
+    # Tipo do imóvel
+    if filtros.get("tipo"):
 
-    texto = (
-        str(imovel.get("titulo", ""))
-        + " "
-        + str(imovel.get("localizacao", ""))
-        + " "
-        + str(imovel.get("valor", ""))
-    ).lower()
+        if filtros["tipo"].lower() != tipo_imovel:
 
+            return False
 
-    # Cidade
-    if CIDADE.lower() not in texto:
-        return False
-
-
-    # Tipo
-    if TIPO.lower() not in texto:
-        return False
 
 
     # Finalidade
-    if FINALIDADE.lower() not in texto:
-        return False
+    if filtros.get("finalidade"):
 
+        if filtros["finalidade"].lower() != tipo_negocio:
 
-    # Valor
-    valor = str(imovel.get("valor", ""))
-
-    numeros = (
-        valor
-        .replace("R$", "")
-        .replace(".", "")
-        .replace(",", ".")
-    )
-
-    import re
-
-    encontrado = re.search(
-        r"\d+(\.\d+)?",
-        numeros
-    )
-
-    if not encontrado:
-        return False
-
-
-    valor_numero = float(encontrado.group())
-
-
-    if valor_numero > VALOR_MAXIMO:
-        return False
-
-
-    return True
+            return False
 
 
 
-    # Verifica tipo
-
-    if TIPO.lower() not in texto:
-        return False
+    # Valor máximo
+    if filtros.get("valor_maximo"):
 
 
-
-    # Verifica finalidade
-
-    if FINALIDADE.lower() not in texto:
-        return False
+        valor = str(
+            imovel.get("valor", "")
+        )
 
 
-
-    # Verifica valor
-
-    valor_limpo = (
-        valor
-        .replace("R$", "")
-        .replace(".", "")
-        .replace(",", ".")
-    )
+        encontrado = re.search(
+            r"\d[\d\.]*,\d{2}",
+            valor
+        )
 
 
-    try:
+        if encontrado:
 
-        valor_numero = float(valor_limpo)
+            valor_limpo = (
+                encontrado.group()
+                .replace(".", "")
+                .replace(",", ".")
+            )
 
-    except:
 
-        return False
+            valor_numero = float(
+                valor_limpo
+            )
 
 
+            if valor_numero > float(
+                filtros["valor_maximo"]
+            ):
 
-    if valor_numero > VALOR_MAXIMO:
-        return False
+                return False
 
 
 

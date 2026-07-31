@@ -78,16 +78,14 @@ class ColetorSegurancaAluguel:
                     link = ""
 
 
-                imoveis.append({
-
+                imovel = {
                     "origem": "Segurança Aluguel",
                     "codigo": codigo,
                     "titulo": titulo,
-                    "localizacao": localizacao,
                     "valor": valor,
-                    "link": link
-
-                })
+                    "tipo_negocio": "Aluguel",
+                    "tipo_imovel": "Casa"
+                }
 
 
             except Exception as e:

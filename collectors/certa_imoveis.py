@@ -1,25 +1,56 @@
 import requests
 from bs4 import BeautifulSoup
 
+from app.classificador import (
+    identificar_tipo_imovel,
+    identificar_negocio,
+)
+
 
 class ColetorCertaImoveis:
 
     def __init__(self):
-        self.url = "https://www.certaimoveis.com.br/imoveis/aluguel"
+
+        self.origem = "Certa Imóveis"
+
+        self.url = (
+            "https://www.certaimoveis.com.br/imoveis/aluguel"
+        )
 
 
     def coletar(self):
 
-        print("[Certa Imóveis] Iniciando coleta")
+        print(
+            f"[{self.origem}] Iniciando coleta"
+        )
+
 
         headers = {
             "User-Agent": "Mozilla/5.0"
         }
 
-        resposta = requests.get(
-            self.url,
-            headers=headers
-        )
+
+        try:
+
+            resposta = requests.get(
+                self.url,
+                headers=headers,
+                timeout=30
+            )
+
+            resposta.raise_for_status()
+
+
+        except Exception as erro:
+
+            print(
+                f"[{self.origem}] Erro ao acessar site:",
+                erro
+            )
+
+            return []
+
+
 
         soup = BeautifulSoup(
             resposta.text,
@@ -29,6 +60,7 @@ class ColetorCertaImoveis:
 
         imoveis = []
 
+
         cards = soup.find_all(
             "div",
             class_="div_imovel"
@@ -36,47 +68,92 @@ class ColetorCertaImoveis:
 
 
         print(
-            f"[Certa Imóveis] Cards encontrados: {len(cards)}"
+            f"[{self.origem}] Cards encontrados: {len(cards)}"
         )
+
 
 
         for card in cards:
 
             try:
 
-                # Código
-                codigo = card.find(
+
+                # ==========================
+                # CÓDIGO
+                # ==========================
+
+                codigo_tag = card.find(
                     "input",
                     class_="onAddFavorito"
-                ).get("value")
+                )
 
 
-                # Título
-                titulo = card.find(
+                if not codigo_tag:
+                    continue
+
+
+                codigo = codigo_tag.get(
+                    "value",
+                    ""
+                )
+
+
+
+                # ==========================
+                # TÍTULO
+                # ==========================
+
+                titulo = ""
+
+
+                titulo_tag = card.find(
                     "p",
                     class_="tit"
-                ).get_text(
-                    strip=True
                 )
 
 
-                # Valor
-                valor = card.find(
+                if titulo_tag:
+
+                    titulo = titulo_tag.get_text(
+                        strip=True
+                    )
+
+
+
+                # ==========================
+                # VALOR
+                # ==========================
+
+                valor = ""
+
+
+                valor_tag = card.find(
                     "p",
                     class_="value"
-                ).get_text(
-                    " ",
-                    strip=True
                 )
 
 
-                # Endereço correto
+                if valor_tag:
+
+                    valor = valor_tag.get_text(
+                        " ",
+                        strip=True
+                    )
+
+
+
+                # ==========================
+                # ENDEREÇO
+                # ==========================
+
                 endereco = ""
+
 
                 enderecos = card.find_all(
                     "div",
                     class_="address"
                 )
+
 
                 for item in enderecos:
 
@@ -85,38 +162,88 @@ class ColetorCertaImoveis:
                         strip=True
                     )
 
+
                     if (
                         texto_endereco
                         and
                         "Imóvel com" not in texto_endereco
                     ):
+
                         endereco = texto_endereco
+
                         break
 
 
-                # Imagem
-                imagem = card.find(
+
+                # ==========================
+                # FILTRO CIDADE
+                # ==========================
+
+                if "governador valadares" not in endereco.lower():
+
+                    continue
+
+
+
+                # ==========================
+                # IMAGEM
+                # ==========================
+
+                imagem = ""
+
+
+                img = card.find(
                     "img",
                     class_="image"
-                ).get("src")
+                )
 
 
-                # Link
-                link = card.find(
+                if img:
+
+                    imagem = img.get(
+                        "src",
+                        ""
+                    )
+
+
+
+                # ==========================
+                # LINK
+                # ==========================
+
+                link = ""
+
+
+                link_tag = card.find(
                     "a",
                     class_="abrir_link"
-                ).get("href")
+                )
 
 
-                # Informações adicionais
-                vagas = ""
-                area = ""
+                if link_tag:
+
+                    link = link_tag.get(
+                        "href",
+                        ""
+                    )
+
+
+
+                # ==========================
+                # INFORMAÇÕES
+                # ==========================
+
                 quartos = ""
+
+                vagas = ""
+
+                area = ""
 
 
                 itens = card.select(
                     "ul.list_items li"
                 )
+
 
                 for item in itens:
 
@@ -126,68 +253,121 @@ class ColetorCertaImoveis:
                     )
 
 
-                    if "Vaga(s)" in texto_item:
+                    valor_item = item.find(
+                        "b"
+                    )
 
-                        vagas = item.find(
-                            "b"
-                        ).get_text(
-                            strip=True
-                        )
+
+                    if not valor_item:
+
+                        continue
+
+
+                    numero = valor_item.get_text(
+                        strip=True
+                    )
+
+
+                    if "Quarto" in texto_item:
+
+                        quartos = numero
+
+
+                    elif "Vaga" in texto_item:
+
+                        vagas = numero
 
 
                     elif "Área" in texto_item:
 
-                        area = item.find(
-                            "b"
-                        ).get_text(
-                            strip=True
-                        )
+                        area = numero
 
 
-                # Quartos pelo link
-                if "quartos" in link:
 
-                    partes = link.split(
-                        "-quartos"
-                    )
-
-                    trecho = partes[0]
-
-                    numeros = trecho.split("-")
-
-                    for numero in reversed(numeros):
-
-                        if numero.isdigit():
-
-                            quartos = numero
-                            break
-
+                # ==========================
+                # MONTA IMÓVEL
+                # ==========================
 
                 imovel = {
 
-                    "origem": "Certa Imóveis",
+                    "origem": self.origem,
+
                     "codigo": codigo,
+
                     "titulo": titulo,
+
                     "localizacao": endereco,
+
                     "valor": valor,
+
                     "quartos": quartos,
+
                     "vagas": vagas,
+
                     "area": area,
+
                     "imagem": imagem,
-                    "link": link
+
+                    "link": link,
+
+
+                    "tipo_negocio": identificar_negocio(
+                        titulo
+                    ),
+
+
+                    "tipo_imovel": identificar_tipo_imovel(
+                        titulo
+                    ),
 
                 }
 
 
-                imoveis.append(imovel)
+
+                print(
+                    "ADICIONANDO:",
+                    codigo,
+                    "|",
+                    titulo,
+                    "|",
+                    valor
+                )
+
+
+
+                imoveis.append(
+                    imovel
+                )
+
 
 
             except Exception as erro:
 
+
                 print(
-                    "[Certa Imóveis] Erro:",
+                    "[Certa Imóveis] Erro lendo card:",
                     erro
                 )
+
+
+
+        print(
+            "\n=== TODOS OS IMÓVEIS DA CERTA ==="
+        )
+
+
+        for imovel in imoveis:
+
+            print(
+                imovel["codigo"],
+                "|",
+                imovel["tipo_imovel"],
+                "|",
+                imovel["titulo"],
+                "|",
+                imovel["valor"]
+            )
+
 
 
         return imoveis

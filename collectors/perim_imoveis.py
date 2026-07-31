@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 
+BASE_URL = "https://www.perimimoveis.com.br/"
 
 class ColetorPerimImoveis:
 
@@ -101,6 +102,23 @@ class ColetorPerimImoveis:
             # procura o bloco do imóvel
             pai = link.find_parent()
 
+            imagem = ""
+
+            img = pai.find("img")
+
+            if img:
+
+                imagem = (
+                    img.get("src")
+                    or img.get("data-src")
+                    or img.get("data-original")
+                    or ""
+                )
+
+
+            if imagem and not imagem.startswith("http"):
+
+                imagem = BASE_URL + imagem.lstrip("/")
 
             texto = pai.get_text(
                 " ",
@@ -119,51 +137,68 @@ class ColetorPerimImoveis:
                 r"Quartos\s+(\d+)"
             )
 
+            suites = self.extrair(
+                texto,
+                r"Suítes\s+(\d+)"
+            )
 
             vagas = self.extrair(
                 texto,
                 r"Garagem\s+(\d+)"
             )
 
+            if not vagas:
+                vagas = "0"
+
 
             bairro = ""
 
-            partes = texto.split()
+            padrao_bairro = r"R\$ ?[\d\.,]+\s+(.+?)\s+Casa"
 
-            if "Casa" in partes:
+            resultado = re.search(
+                padrao_bairro,
+                texto
+            )           
+            
+            if resultado:
+                bairro = resultado.group(1).strip()
 
-                pos = partes.index("Casa")
 
-                bairro = " ".join(
-                    partes[max(0,pos-2):pos]
-                )
+            if href.startswith("http"):
+                url_imovel = href
+            else:
+                url_imovel = BASE_URL + href.replace("../", "")
+
+            titulo = "Casa"
+
+            if quartos:
+                titulo += f" {quartos} quarto"
+
+                if quartos != "1":
+                     titulo += "s"
+
+            if bairro:
+                titulo += f" - {bairro.title()}"
 
 
-            imoveis.append({
-
-                "origem": self.origem,
-
+            imovel = {
+                "origem": "Perim Imóveis",
                 "codigo": codigo,
-
-                "titulo": "Casa para aluguel",
-
-                "localizacao": bairro,
-
+                "titulo": titulo,
+                "localizacao": bairro.title(),
                 "valor": valor,
-
                 "quartos": quartos,
-
+                "suites": suites,
                 "vagas": vagas,
-
                 "area": "",
+                "imagem": imagem,
+                "link": url_imovel,
+                "tipo_negocio": "Aluguel",
+                "tipo_imovel": "Casa",
+            }
+            
 
-                "imagem": "",
-
-                "link":
-                    "https://www.perimimoveis.com.br/"
-                    + href.replace("../","")
-
-            })
+            imoveis.append(imovel)
 
 
         print(

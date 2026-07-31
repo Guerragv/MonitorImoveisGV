@@ -1,0 +1,183 @@
+body{
+    background:#f4f6f9;
+}
+
+/* Container */
+
+.container{
+    max-width:1600px !important;
+    width:98%;
+    padding-bottom:40px;
+}
+
+/* Cabeçalho */
+
+h1{
+    font-weight:700;
+}
+
+
+/* =========================
+   CARDS DE IMÓVEIS
+========================= */
+
+.card{
+    border:none;
+    border: radius 14px;px;
+    overflow:visible;
+}
+
+.card-imovel{
+    transition:transform .25s ease, box-shadow .25s ease;
+}
+
+.card-imovel{
+    transition:transform .25s ease, box-shadow .25s ease;
+    margin-bottom:20px;
+    height:100%;
+}
+
+
+
+/* Imagens */
+
+.card-imovel img{
+    width:100%;
+    height:230px;
+    object-fit:cover;
+    background:#ececec;
+}
+
+
+/* Valor */
+
+.valor-imovel{
+    color:#198754;
+    font-size:1.5rem;
+    font-weight:700;
+    line-height:1.2;
+}
+
+
+/* Localização */
+
+.info-imovel{
+    display:flex;
+    gap:18px;
+}
+
+
+/* Informações */
+
+.info-imovel{
+    display:flex;
+    justify-content:space-between;
+    margin-top:8px;
+    font-weight:600;
+}
+
+
+/* Data */
+
+.data-encontrado{
+    color:#6c757d;
+    font-size:.9rem;
+}
+
+
+/* Badge */
+
+.badge{
+    font-size:.8rem;
+}
+
+
+/* Botões */
+
+.btn{
+    border-radius:8px;
+}
+.btn-primary{
+    font-weight:600;
+}
+
+/* Cards superiores */
+
+.display-6{
+    font-size:2rem;
+    margin-bottom:.5rem;
+}
+.card h2{
+    margin-bottom:.25rem;
+}
+.shadow-sm{
+    transition:.2s;
+}
+
+.shadow-sm:hover{
+    box-shadow:0 .7rem 1.4rem rgba(0,0,0,.15)!important;
+}
+
+
+/* Formulários */
+
+.form-control,
+.form-select{
+    border-radius:8px;
+}
+
+
+/* =========================
+   RESPONSIVIDADE
+========================= */
+
+@media (max-width:768px){
+
+    .card-imovel img{
+        height:180px !important;
+    }
+
+    h1{
+        font-size:1.8rem;
+    }
+
+}
+
+/* Filtros de pesquisa */
+
+    .filtro-texto{
+        font-size: 1.05rem;
+        height: 42px;
+    }
+
+    .btn-check:checked + .btn {
+    color: white;
+}
+
+/* Evita corte dos cards pelo Bootstrap */
+
+.row{
+    overflow:visible;
+}
+
+.col-md-4,
+.col-lg-4,
+.col-xl-3{
+    overflow:visible;
+}
+/* Corrige painel de filtros */
+
+.card-body{
+    height:auto !important;
+    overflow:visible !important;
+}
+
+
+.row{
+    overflow:visible !important;
+}
+
+
+form{
+    padding-bottom:15px;
+}

@@ -13,9 +13,11 @@ SELECT
     quartos,
     suites,
     vagas,
-    area
+    area,
+    tipo_negocio,
+    tipo_imovel
 FROM imoveis
-ORDER BY id DESC
+ORDER BY rowid DESC
 """)
 
 dados = cursor.fetchall()

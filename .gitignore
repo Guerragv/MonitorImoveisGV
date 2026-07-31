@@ -32,3 +32,17 @@ procurar_links_docarmo.py
 
 # Backups locais do banco
 backup/
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Arquivos temporários de manutenção
+notepad*
+corrigir_banco.py
+limpar_banco.py
+ver_*.py
+teste_email.py

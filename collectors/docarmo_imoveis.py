@@ -1,6 +1,8 @@
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
 
+from app.classificador import identificar_tipo_imovel, identificar_negocio
+
 
 class ColetorDoCarmoImoveis:
 
@@ -17,9 +19,12 @@ class ColetorDoCarmoImoveis:
 
         with sync_playwright() as p:
 
-            navegador = p.chromium.launch(headless=True)
+            navegador = p.chromium.launch(
+                headless=True
+            )
 
             pagina = navegador.new_page()
+
 
             try:
 
@@ -33,139 +38,177 @@ class ColetorDoCarmoImoveis:
 
                 html = pagina.content()
 
+
             except Exception as e:
 
-                print(f"[{self.origem}] Erro ao acessar página:", e)
+                print(
+                    f"[{self.origem}] Erro:",
+                    e
+                )
+
                 navegador.close()
+
                 return imoveis
 
 
             navegador.close()
 
 
-        soup = BeautifulSoup(html, "lxml")
 
-        cards = soup.select("div.card.card_imovel_style")
+        soup = BeautifulSoup(
+            html,
+            "lxml"
+        )
 
-        print(f"[{self.origem}] Cards encontrados: {len(cards)}")
+
+        cards = soup.select(
+            "a[href*='/imovel/']"
+        )
+
+
+        print(
+            f"[{self.origem}] Cards encontrados: {len(cards)}"
+        )
+
 
 
         for card in cards:
 
             try:
 
-                # O link fica no elemento pai <a>
-                link = ""
-
-                if card.parent.name == "a":
-                    link = card.parent.get("href", "")
-
-
-                imagem = ""
-
-                img = card.select_one("img.img-imovel")
-
-                if img:
-                    imagem = img.get("src", "")
+                link = card.get(
+                    "href",
+                    ""
+                )
 
 
                 codigo = ""
 
+
+                img = card.select_one(
+                    "img[data-codimovel]"
+                )
+
+
                 if img:
-                    codigo = img.get("data-codimovel", "")
+
+                    codigo = img.get(
+                        "data-codimovel",
+                        ""
+                    )
+
+
+                if not codigo:
+
+                    continue
+
+
+
+                imagem = ""
+
+
+                if img:
+
+                    imagem = img.get(
+                        "src",
+                        ""
+                    )
+
+
+
+                texto = card.get_text(
+                    " ",
+                    strip=True
+                )
+
 
 
                 titulo = ""
 
-                titulo_tag = card.select_one("h2.card-title")
+
+                titulo_tag = card.find(
+                    "h2"
+                )
+
 
                 if titulo_tag:
+
                     titulo = titulo_tag.get_text(
                         " ",
                         strip=True
                     )
 
 
-                localizacao = ""
+                else:
 
-                local_tag = card.select_one(
-                    "span.card-text"
-                )
+                    titulo = texto[:100]
 
-                if local_tag:
-                    localizacao = local_tag.get_text(
-                        " ",
-                        strip=True
-                    )
 
 
                 valor = ""
 
-                valor_tag = card.select_one(
-                    "strong.preco-imovel-card"
-                )
 
-                if valor_tag:
-                    valor = valor_tag.get_text(
-                        " ",
-                        strip=True
+                if "R$" in texto:
+
+                    partes = texto.split("R$")
+
+
+                    if len(partes) > 1:
+
+                        valor = (
+                            "R$ "
+                            + partes[1].split()[0]
+                        )
+
+
+
+                localizacao = ""
+
+
+                if " no " in titulo.lower():
+
+                    localizacao = (
+                        titulo.lower()
+                        .split(" no ")[-1]
                     )
 
-
-                # Dados dos ícones
-                quartos = ""
-                vagas = ""
-                area = ""
+                    localizacao = localizacao.title()
 
 
-                icones = card.select(
-                    ".container-icon"
-                )
 
-
-                for item in icones:
-
-                    texto = item.get_text(
-                        " ",
-                        strip=True
-                    )
-
-
-                    if "m²" in texto:
-                        area = texto.replace(
-                            "m²",
-                            ""
-                        ).strip()
-
-
-                    elif "Quarto" in texto:
-                        partes = texto.split()
-
-                        if partes:
-                            quartos = partes[0]
-
-
-                    elif "Vaga" in texto:
-                        partes = texto.split()
-
-                        if partes:
-                            vagas = partes[0]
-
-
-                imoveis.append({
+                imovel = {
 
                     "origem": self.origem,
-                    "codigo": codigo,
-                    "titulo": titulo,
-                    "localizacao": localizacao,
-                    "valor": valor,
-                    "quartos": quartos,
-                    "vagas": vagas,
-                    "area": area,
-                    "imagem": imagem,
-                    "link": link
 
-                })
+                    "codigo": codigo,
+
+                    "titulo": titulo,
+
+                    "localizacao": localizacao,
+
+                    "valor": valor,
+
+                    "quartos": "",
+
+                    "vagas": "",
+
+                    "area": "",
+
+                    "imagem": imagem,
+
+                    "link": link,
+
+                    "tipo_negocio": identificar_negocio(titulo),
+
+                    "tipo_imovel": identificar_tipo_imovel(titulo),
+
+                }
+
+
+                imoveis.append(
+                    imovel
+                )
+
 
 
             except Exception as e:
@@ -174,6 +217,7 @@ class ColetorDoCarmoImoveis:
                     f"[{self.origem}] Erro lendo imóvel:",
                     e
                 )
+
 
 
         return imoveis

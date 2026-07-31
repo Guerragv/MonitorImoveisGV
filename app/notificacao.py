@@ -33,65 +33,111 @@ def enviar_email(imovel):
     destinatarios = email_config["destinatarios"]
 
 
-    assunto = "🏠 MonitorImoveisGV - Novo imóvel encontrado"
+    assunto = (
+        "🏠 MonitorImoveisGV - "
+        "Novo imóvel encontrado"
+    )
 
 
     corpo = f"""
-Olá!
+    <html>
+    <body>
 
-O MonitorImoveisGV encontrou um novo imóvel dentro dos filtros configurados.
+    <h2>🏠 Novo imóvel encontrado</h2>
 
---------------------------------
-
-Origem:
-{imovel.get('origem', '')}
-
-Código:
-{imovel.get('codigo', '')}
-
-Título:
-{imovel.get('titulo', '')}
-
-Valor:
-{imovel.get('valor', '')}
-
-Localização:
-{imovel.get('localizacao', '')}
-
-Quartos:
-{imovel.get('quartos', '')}
-
-Vagas:
-{imovel.get('vagas', '')}
-
-Área:
-{imovel.get('area', '')}
-
-Link:
-{imovel.get('link', '')}
-
---------------------------------
-
-Este alerta foi enviado automaticamente pelo MonitorImoveisGV.
-"""
+    <p>
+    O MonitorImoveisGV encontrou um imóvel
+    dentro dos filtros configurados.
+    </p>
 
 
-    mensagem = MIMEMultipart()
+    <hr>
+
+
+    <b>Origem:</b><br>
+    {imovel.get('origem', '')}
+    <br><br>
+
+
+    <b>Código:</b><br>
+    {imovel.get('codigo', '')}
+    <br><br>
+
+
+    <b>Título:</b><br>
+    {imovel.get('titulo', '')}
+    <br><br>
+
+
+    <b>Valor:</b><br>
+    {imovel.get('valor', '')}
+    <br><br>
+
+
+    <b>Localização:</b><br>
+    {imovel.get('localizacao', '')}
+    <br><br>
+
+
+    <b>Quartos:</b><br>
+    {imovel.get('quartos', '')}
+    <br><br>
+
+
+    <b>Vagas:</b><br>
+    {imovel.get('vagas', '')}
+    <br><br>
+
+
+    <b>Área:</b><br>
+    {imovel.get('area', '')}
+    <br><br>
+
+
+    <b>Link:</b><br>
+
+    <a href="{imovel.get('link', '')}">
+    Acessar imóvel
+    </a>
+
+
+    <hr>
+
+
+    <small>
+    Alerta automático enviado pelo MonitorImoveisGV.
+    </small>
+
+
+    </body>
+    </html>
+    """
+
+
+
+    mensagem = MIMEMultipart(
+        "alternative"
+    )
+
 
     mensagem["From"] = remetente
 
-    mensagem["To"] = ", ".join(destinatarios)
+    mensagem["To"] = ", ".join(
+        destinatarios
+    )
 
     mensagem["Subject"] = assunto
+
 
 
     mensagem.attach(
         MIMEText(
             corpo,
-            "plain",
+            "html",
             "utf-8"
         )
     )
+
 
 
     try:
@@ -100,6 +146,7 @@ Este alerta foi enviado automaticamente pelo MonitorImoveisGV.
             "smtp.gmail.com",
             587
         )
+
 
         servidor.starttls()
 
@@ -120,14 +167,24 @@ Este alerta foi enviado automaticamente pelo MonitorImoveisGV.
         servidor.quit()
 
 
-        print("E-mail enviado com sucesso!")
+        print(
+            "E-mail enviado com sucesso!"
+        )
+
 
         return True
 
 
+
     except Exception as erro:
 
-        print("Erro ao enviar e-mail:")
-        print(erro)
+        print(
+            "Erro ao enviar e-mail:"
+        )
+
+        print(
+            erro
+        )
+
 
         return False

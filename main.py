@@ -4,16 +4,32 @@ from collectors.docarmo_imoveis import ColetorDoCarmoImoveis
 from collectors.certa_imoveis import ColetorCertaImoveis
 from collectors.perim_imoveis import ColetorPerimImoveis
 
+
 from app.filtros import aprovado
 from app.notificacao import enviar_email
 from app.configuracao import carregar_config
-from database.banco import ja_existe, salvar
+from app.logger import configurar_logger
+
+from database.banco import (
+    carregar_monitor_config,
+    ja_existe,
+    salvar,
+    salvar_execucao,
+    iniciar_status,
+    finalizar_status
+)
+
 from database.backup import criar_backup
 
 from datetime import datetime
 from pathlib import Path
 import sys
 
+logger = configurar_logger()
+
+logger.info(
+    "Monitor iniciado"
+)
 
 # ==============================
 # LOG
@@ -43,18 +59,19 @@ class Logger:
         self.arquivo.flush()
 
     def flush(self):
-        pass
+        self.terminal.flush()
 
 
 sys.stdout = Logger()
 
-
-
-# ==============================
-# PRINCIPAL
-# ==============================
-
 def main():
+
+    filtros = carregar_monitor_config()
+
+    print("FILTRO ATUAL DO MONITOR:")
+    print(filtros)
+
+    iniciar_status()
 
     print()
     print("=" * 50)
@@ -65,9 +82,15 @@ def main():
     print("=" * 50)
 
 
+    # Cria backup do banco antes da execução
+    criar_backup()
+
+
+    # Carrega configurações
     config = carregar_config()
 
     sites = config["sites"]
+
 
 
     imoveis = []
@@ -137,7 +160,20 @@ def main():
 
     for imovel in imoveis:
 
-        if aprovado(imovel):
+        print(
+            imovel.get("origem"),
+            "|",
+            imovel.get("titulo"),
+            "|",
+            imovel.get("tipo_imovel"),
+            "|",
+            imovel.get("tipo_negocio"),
+            "|",
+            imovel.get("valor")
+        )
+
+
+        if aprovado(imovel, filtros):
 
             aprovados.append(imovel)
 
@@ -148,6 +184,7 @@ def main():
     print(
         f"Imóveis coletados: {len(imoveis)}"
     )
+
 
     print(
         f"Imóveis aprovados pelos filtros: {len(aprovados)}"
@@ -162,102 +199,109 @@ def main():
     novos = []
 
 
-    for imovel in aprovados:
+    for imovel in imoveis:
 
-        if not ja_existe(
-            imovel["origem"],
-            imovel["codigo"]
-        ):
+        if aprovado(imovel, filtros):
 
-            novos.append(imovel)
-
-
-
-    if novos:
-
-
-        print()
-
-        print(
-            f"Novos imóveis encontrados: {len(novos)}"
-        )
-
-
-
-        for imovel in novos:
-
-            print()
-
-            print("-" * 40)
-
-            print(
-                "Origem:",
-                imovel.get("origem")
-            )
-
-            print(
-                "Código:",
-                imovel.get("codigo")
-            )
-
-            print(
-                "Título:",
-                imovel.get("titulo")
-            )
-
-            print(
-                "Valor:",
-                imovel.get("valor")
-            )
-
-            print(
-                "Local:",
-                imovel.get("localizacao")
-            )
-
-            print(
-                "Link:",
-                imovel.get("link")
-            )
-
-
-
-        # Envia e salva
-
-        for imovel in novos:
-
-
-            enviado = enviar_email(imovel)
-
-
-            if enviado:
+            if not ja_existe(
+                imovel["origem"],
+                imovel["codigo"]
+            ):
 
                 salvar(imovel)
 
-                print(
-                    "Imóvel salvo no banco."
-                )
+                novos.append(imovel)
 
-
-            else:
 
                 print(
-                    "Imóvel não salvo porque o e-mail falhou."
+                    f"Imóvel aprovado salvo: {imovel['origem']} | {imovel['codigo']}"
                 )
-
-
-
-    else:
-
-        print()
-
-        print(
-            "Nenhum imóvel novo encontrado."
-        )
 
 
 
     print()
+
+
+    print(
+        f"Novos imóveis encontrados: {len(novos)}"
+    )
+
+
+
+    # Exibe imóveis novos
+
+    for imovel in novos:
+
+        print()
+        print("-" * 40)
+
+        print(
+            "Origem:",
+            imovel.get("origem")
+        )
+
+        print(
+            "Código:",
+            imovel.get("codigo")
+        )
+
+        print(
+            "Título:",
+            imovel.get("titulo")
+        )
+
+        print(
+            "Valor:",
+            imovel.get("valor")
+        )
+
+        print(
+            "Local:",
+            imovel.get("localizacao")
+        )
+
+        print(
+            "Link:",
+            imovel.get("link")
+        )
+    # ==============================
+    # ENVIO DE EMAIL
+    # ==============================
+
+    for imovel in novos:
+
+        enviado = enviar_email(imovel)
+
+
+        if not enviado:
+
+            print(
+                "Falha no envio do e-mail."
+            )
+
+
+
+    # ==============================
+    # REGISTRA EXECUÇÃO
+    # ==============================
+
+    salvar_execucao(
+        len(imoveis),
+        len(aprovados),
+        len(novos)
+    )
+
+
+    finalizar_status()
+
+
+    print()
+
+
+    logger.info(
+        "Processo finalizado"
+    )
+
 
     print(
         "Processo finalizado."
