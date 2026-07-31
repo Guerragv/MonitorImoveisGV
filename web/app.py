@@ -12,7 +12,11 @@ import sqlite3
 import subprocess
 
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    template_folder="templates",
+    static_folder="static"
+)
 
 
 BANCO = BASE_DIR / "database" / "monitor.db"
