@@ -8,6 +8,9 @@ __pycache__/
 # Banco de dados
 *.db
 
+# Banco inicial da aplicação
+!database/monitor.db
+
 # Logs
 logs/
 *.log
