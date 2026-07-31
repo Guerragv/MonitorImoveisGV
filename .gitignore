@@ -21,6 +21,10 @@ config/config.yaml
 # Arquivos HTML de análise
 *.html
 
+# Não ignorar os templates do Flask
+!web/templates/
+!web/templates/*.html
+
 # Scripts de teste
 teste_*.py
 analisar_*.py

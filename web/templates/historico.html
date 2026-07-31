@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block conteudo %}
+
+<h2 class="mb-4">
+    📊 Histórico de execuções
+</h2>
+
+
+<table class="table table-bordered table-hover">
+
+<thead>
+
+<tr>
+
+<th>
+Data
+</th>
+
+<th>
+Coletados
+</th>
+
+<th>
+Aprovados
+</th>
+
+<th>
+Novos
+</th>
+
+</tr>
+
+</thead>
+
+
+<tbody>
+
+{% for execucao in historico %}
+
+<tr>
+
+<td>
+{{ execucao[0] }}
+</td>
+
+<td>
+{{ execucao[1] }}
+</td>
+
+<td>
+{{ execucao[2] }}
+</td>
+
+<td>
+{{ execucao[3] }}
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+
+{% endblock %}
